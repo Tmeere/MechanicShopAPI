@@ -14,8 +14,7 @@ def create_app(config_name):
     ma.init_app(app)
     
     
-    app.register_blueprint(members_bp, url_prefix='/customers')
-    
+    app.register_blueprint(members_bp, url_prefix='/customers')    
     return app 
 
 #  Sets what mode our app is in 
