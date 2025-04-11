@@ -1,0 +1,11 @@
+from app import create_app
+from app.models import db
+
+# Create the Flask app
+app = create_app('DevelopmentConfig')
+
+# Initialize the database
+with app.app_context():
+    db.create_all()
+    
+app.run()
