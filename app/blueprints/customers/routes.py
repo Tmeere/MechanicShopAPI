@@ -4,11 +4,11 @@ from app.blueprints.customers.schemas import customer_schema, customers_schema
 from marshmallow import ValidationError
 from app.models import Customer, db
 from sqlalchemy import select
-from app.extensions import limiter
+from app.extensions import limiter, cache
 
 
 @members_bp.route("/", methods=['POST'])
-@limiter.limit("3 per hour")
+@limiter.limit("3 per hour")  # Limit to 3 requests per hour
 def create_customer():
     try:
         customer_data = customer_schema.load(request.json)
@@ -39,15 +39,16 @@ def create_customer():
 
 
 @members_bp.route("/", methods=['GET'])
+@limiter.limit("10 per minute")  # Limit to 10 requests per minute
+@cache.cached(timeout=60)  # Cache for 1 minute
 def get_customers():
     query = select(Customer)
     result = db.session.execute(query).scalars().all()
     return customers_schema.jsonify(result), 200
 
 
-
-
 @members_bp.route("/<int:customer_id>", methods=["PUT"])
+@limiter.limit("3 per hour")  # Limit to 3 requests per hour
 def update_customer(customer_id):
     query = select(Customer).where(Customer.id == customer_id)
     customer = db.session.execute(query).scalars().first()
@@ -80,6 +81,7 @@ def update_customer(customer_id):
 
 
 @members_bp.route("/<int:customer_id>", methods=['DELETE'])
+@limiter.limit("3 per hour")  # Limit to 3 requests per hour
 def delete_customer(customer_id):
     query = select(Customer).where(Customer.id == customer_id)
     customer = db.session.execute(query).scalars().first()
@@ -93,6 +95,8 @@ def delete_customer(customer_id):
 
 
 @members_bp.route("/<int:customer_id>", methods=['GET'])
+@limiter.limit("10 per minute")  # Limit to 10 requests per minute
+@cache.cached(timeout=60, key_prefix=lambda: f"customer_{customer_id}")  # Cache for 1 minute
 def get_customer_by_id(customer_id):
     query = select(Customer).where(Customer.id == customer_id)
     customer = db.session.execute(query).scalars().first()

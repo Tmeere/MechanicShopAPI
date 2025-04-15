@@ -4,11 +4,12 @@ from flask import request, jsonify
 from marshmallow import ValidationError
 from app.models import Mechanic, db
 from sqlalchemy import select
-
-
+from app.extensions import limiter, cache
 
 
 @mechanics_bp.route("/<int:mechanic_id>", methods=['GET'])
+@limiter.limit("10 per minute")  # Limit to 10 requests per minute
+@cache.cached(timeout=60, key_prefix=lambda: f"mechanic_{mechanic_id}")  # Cache for 1 minute
 def get_mechanic(mechanic_id):
     query = select(Mechanic).where(Mechanic.id == mechanic_id)
     mechanic_instance = db.session.execute(query).scalars().first()
@@ -22,6 +23,8 @@ def get_mechanic(mechanic_id):
 
 
 @mechanics_bp.route("/", methods=['GET'])
+@limiter.limit("10 per minute")  # Limit to 10 requests per minute
+@cache.cached(timeout=60)  # Cache for 1 minute
 def get_all_mechanics():
     query = select(Mechanic)
     mechanics = db.session.execute(query).scalars().all()
@@ -31,6 +34,7 @@ def get_all_mechanics():
 
 
 @mechanics_bp.route("/", methods=["POST"])
+@limiter.limit("3 per hour")  # Limit to 3 requests per hour
 def create_mechanic():
     try:
         # Validate and deserialize input data
@@ -57,6 +61,7 @@ def create_mechanic():
 
 
 @mechanics_bp.route("/<int:mechanic_id>", methods=['DELETE'])
+@limiter.limit("3 per hour")  # Limit to 3 requests per hour
 def delete_mechanic(mechanic_id):
     query = select(Mechanic).where(Mechanic.id == mechanic_id)
     mechanic_instance = db.session.execute(query).scalars().first()
@@ -74,6 +79,7 @@ def delete_mechanic(mechanic_id):
 
 
 @mechanics_bp.route("/<int:mechanic_id>", methods=["PUT"])
+@limiter.limit("3 per hour")  # Limit to 3 requests per hour
 def update_mechanic(mechanic_id):
     # Fetch the mechanic instance from the database
     query = select(Mechanic).where(Mechanic.id == mechanic_id)
@@ -99,5 +105,3 @@ def update_mechanic(mechanic_id):
 
     # Return the updated mechanic as a response
     return mechanic_schema.jsonify(mechanic_instance), 200
-
-

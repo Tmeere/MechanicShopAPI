@@ -1,9 +1,10 @@
 from flask import jsonify, request
 from . import serviceTicket_bp
 from .schemas import service_ticket_schema, service_tickets_schema, return_service_ticket_schema
-from app.models import db, Mechanic, ServiceTicket, Customer  # Ensure Customer is imported
+from app.models import db, Mechanic, ServiceTicket, Customer
 from sqlalchemy import select, delete
 from marshmallow import ValidationError
+from app.extensions import cache
 
 
 @serviceTicket_bp.route("/", methods=["POST"])
@@ -27,9 +28,13 @@ def create_service_ticket():
         return jsonify({"message": "An unexpected error occurred", "error": str(e)}), 500
 
     try:
-        # Check if the customer_id is valid
-        customer_query = select(Customer).where(Customer.id == service_ticket_data["customer_id"])
-        customer = db.session.execute(customer_query).scalar()
+        # Cache the customer query to avoid redundant database hits
+        @cache.cached(timeout=300, key_prefix=lambda: f"customer_{service_ticket_data['customer_id']}")
+        def get_customer(customer_id):
+            customer_query = select(Customer).where(Customer.id == customer_id)
+            return db.session.execute(customer_query).scalar()
+
+        customer = get_customer(service_ticket_data["customer_id"])
         if not customer:
             return jsonify({"message": f"Invalid customer ID: {service_ticket_data['customer_id']}"}), 400
 
@@ -41,8 +46,13 @@ def create_service_ticket():
         )
 
         for mechanic_id in service_ticket_data["mechanic_ids"]:
-            query = select(Mechanic).where(Mechanic.id == mechanic_id)
-            mechanic = db.session.execute(query).scalar()
+            # Cache the mechanic query to avoid redundant database hits
+            @cache.cached(timeout=300, key_prefix=lambda: f"mechanic_{mechanic_id}")
+            def get_mechanic(mechanic_id):
+                query = select(Mechanic).where(Mechanic.id == mechanic_id)
+                return db.session.execute(query).scalar()
+
+            mechanic = get_mechanic(mechanic_id)
             if mechanic:
                 new_service_ticket.mechanics.append(mechanic)
             else:
@@ -57,11 +67,17 @@ def create_service_ticket():
 
     return return_service_ticket_schema.jsonify(new_service_ticket), 201
 
+
 @serviceTicket_bp.route("/", methods=["GET"])
+@cache.cached(timeout=60)
 def get_all_tickets():
     try:
-        # Query all service tickets
-        query = select(ServiceTicket)
+        # Add pagination to limit the number of tickets returned
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        # Query service tickets with pagination
+        query = select(ServiceTicket).limit(per_page).offset((page - 1) * per_page)
         service_tickets = db.session.execute(query).scalars().all()
 
         # Return the serialized list of service tickets
