@@ -27,31 +27,29 @@ class Customer(Base):
     id: Mapped[int] = mapped_column(primary_key=True)  # Primary key
     name: Mapped[str] = mapped_column(db.String(100))  # Customer name
     email: Mapped[str] = mapped_column(db.String(150), unique=True)  # Unique email
-    phone: Mapped[str] = mapped_column(db.String(15), unique=True)  # Unique phone number (changed to string)
+    phone: Mapped[str] = mapped_column(db.String(15), unique=True)  # Unique phone number
     
     # Relationship to service_tickets
-    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship("ServiceTicket", back_populates="customer")
-
-# ServiceTicket model representing the "Service Tickets" table
+    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
+        "ServiceTicket", 
+        back_populates="customer", 
+        cascade="all, delete"  # When a Customer is deleted, their ServiceTickets are also deleted
+    )
 # ServiceTicket model
 class ServiceTicket(Base):
     __tablename__ = "service_tickets"
-    
-    # Columns
-    id: Mapped[int] = mapped_column(primary_key=True)
-    VIN: Mapped[str] = mapped_column(db.String(17))
-    service_date: Mapped[date]
-    service_desc: Mapped[str] = mapped_column(db.String(1000))
-    customer_id: Mapped[int] = mapped_column(ForeignKey('customers.id'))
-    
-    # Relationships
-    customer: Mapped["Customer"] = db.relationship("Customer", back_populates="service_tickets")
-    mechanics: Mapped[List["Mechanic"]] = db.relationship(
-        "Mechanic", 
-        secondary=service_ticket_mechanic_association, 
-        back_populates="assigned_service_tickets"
-    )
 
+    id: Mapped[int] = mapped_column(primary_key=True)  # Primary key
+    vin: Mapped[str] = mapped_column(db.String(17), nullable=False)  # Vehicle Identification Number
+    service_date: Mapped[date]  # Date of service
+    service_description: Mapped[str] = mapped_column(db.String(255), nullable=False)  # Description of the service
+    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable=False)  # Foreign key to Customer
+
+    # Relationships
+    customer: Mapped["Customer"] = db.relationship(back_populates="service_tickets")
+    mechanics: Mapped[List["Mechanic"]] = db.relationship(
+        secondary=service_ticket_mechanic_association, back_populates="assigned_service_tickets"
+    )
 # Mechanic model
 class Mechanic(Base):
     __tablename__ = "mechanics"

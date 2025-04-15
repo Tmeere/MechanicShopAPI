@@ -2,20 +2,23 @@ from flask import Flask
 from app.models import db
 from app.extensions import ma
 from app.blueprints.customers import members_bp
-
+from app.blueprints.service_tickets import serviceTicket_bp
+from app.blueprints.mechanics import mechanics_bp
 
 def create_app(config_name):
-    
+    # Create the Flask application
     app = Flask(__name__)
+    
+    # Load configuration from the specified config class
     app.config.from_object(f'config.{config_name}')
     
-    
+    # Initialize extensions
     db.init_app(app)
     ma.init_app(app)
     
+    # Register blueprints with their respective URL prefixes
+    app.register_blueprint(members_bp, url_prefix='/customers') 
+    app.register_blueprint(serviceTicket_bp, url_prefix='/service_ticket')   
+    app.register_blueprint(mechanics_bp, url_prefix='/mechanics')
     
-    app.register_blueprint(members_bp, url_prefix='/customers')    
-    return app 
-
-#  Sets what mode our app is in 
-# app = create_app('DevelopmentConfig')
+    return app
