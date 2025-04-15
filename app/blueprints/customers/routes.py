@@ -4,9 +4,11 @@ from app.blueprints.customers.schemas import customer_schema, customers_schema
 from marshmallow import ValidationError
 from app.models import Customer, db
 from sqlalchemy import select
+from app.extensions import limiter
 
 
 @members_bp.route("/", methods=['POST'])
+@limiter.limit("3 per hour")
 def create_customer():
     try:
         customer_data = customer_schema.load(request.json)
