@@ -1,7 +1,7 @@
 from flask import Flask
 from app.models import db
 from app.extensions import ma, limiter, cache
-from app.blueprints.customers import members_bp
+from app.blueprints.customers import customers_bp
 from app.blueprints.service_tickets import serviceTicket_bp
 from app.blueprints.mechanics import mechanics_bp
 
@@ -19,7 +19,7 @@ def create_app(config_name):
     cache.init_app(app)
     
     # Register blueprints with their respective URL prefixes
-    app.register_blueprint(members_bp, url_prefix='/customers') 
+    app.register_blueprint(customers_bp, url_prefix='/customers') 
     app.register_blueprint(serviceTicket_bp, url_prefix='/service_ticket')   
     app.register_blueprint(mechanics_bp, url_prefix='/mechanics')
     

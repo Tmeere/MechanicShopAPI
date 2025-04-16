@@ -28,6 +28,7 @@ class Customer(Base):
     name: Mapped[str] = mapped_column(db.String(100))  # Customer name
     email: Mapped[str] = mapped_column(db.String(150), unique=True)  # Unique email
     phone: Mapped[str] = mapped_column(db.String(15), unique=True)  # Unique phone number
+    password: Mapped[str] = mapped_column(db.String(100)) 
     
     # Relationship to service_tickets
     service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
