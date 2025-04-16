@@ -9,7 +9,7 @@ def encode_token(user_id):
     payload = {
         'exp': datetime.now(timezone.utc) + timedelta(days=0, hours=1),
         'iat': datetime.now(timezone.utc),
-        'sub': user_id
+        'sub': str(user_id)
     }
 
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')

@@ -1,8 +1,14 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import ForeignKey, CheckConstraint
 from flask_sqlalchemy import SQLAlchemy
+from enum import Enum
 from datetime import date
 from typing import List
+
+class ServiceStatus(Enum):
+    PENDING = "Pending"
+    IN_PROGRESS = "In Progress"
+    COMPLETED = "Completed"
 
 # Base class for SQLAlchemy models
 class Base(DeclarativeBase):
@@ -45,6 +51,7 @@ class ServiceTicket(Base):
     service_date: Mapped[date]  # Date of service
     service_description: Mapped[str] = mapped_column(db.String(255), nullable=False)  # Description of the service
     customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable=False)  # Foreign key to Customer
+    status: Mapped[ServiceStatus] = mapped_column(db.Enum(ServiceStatus), default=ServiceStatus.PENDING)  # Enum column
 
     # Relationships
     customer: Mapped["Customer"] = db.relationship(back_populates="service_tickets")

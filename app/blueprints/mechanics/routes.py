@@ -2,11 +2,64 @@ from app.blueprints.mechanics import mechanics_bp
 from app.blueprints.mechanics.schemas import mechanic_schema, mechanics_schema
 from flask import request, jsonify
 from marshmallow import ValidationError
-from app.models import Mechanic, db
+from app.models import Mechanic, db, ServiceTicket
 from sqlalchemy import select
+from app.utils.util import encode_token, token_required
 from app.extensions import limiter, cache
 
 
+@mechanics_bp.route("/login", methods=['POST'])
+def login():
+    try:
+        credentials = request.json
+        email = credentials['email']
+        name = credentials['name']
+    except KeyError:
+        return jsonify({'message': 'Invalid payload, expecting email and name'}), 400
+
+    query = select(Mechanic).where(Mechanic.email == email)
+    mechanic = db.session.execute(query).scalar_one_or_none()
+    
+    if not mechanic:
+        return jsonify({'message': 'Email invalid or User does not exist, create an account?'})
+
+    if mechanic and mechanic.name == name:
+        auth_token = encode_token(mechanic.id)
+
+        response = {
+            "status": "success",
+            "message": "Successfully Logged In",
+            "auth_token": auth_token
+        }
+        return jsonify(response), 200
+    else:
+        return jsonify({'message': "Invalid email or name"}), 401
+
+@mechanics_bp.route("/remove-ticket/<int:ticket_id>", methods=["DELETE"])
+@token_required
+def remove_ticket(mechanic_id, ticket_id):
+    # Ensure the mechanic is logged in (mechanic_id is provided by @token_required)
+    if not mechanic_id:
+        return jsonify({"message": "Unauthorized. Please log in."}), 401
+
+    # Query the service ticket by its ID and ensure it belongs to the mechanic
+    query = select(ServiceTicket).where(
+        ServiceTicket.id == ticket_id, 
+        ServiceTicket.mechanics.any(id=mechanic_id)
+    )
+    ticket = db.session.execute(query).scalars().first()
+
+    # Check if the ticket exists and belongs to the mechanic
+    if ticket is None:
+        return jsonify({"message": "Ticket not found or you are not authorized to delete this ticket"}), 404
+
+    # Delete the ticket from the database
+    db.session.delete(ticket)
+    db.session.commit()
+
+    # Return a success message
+    return jsonify({"message": f"Ticket with ID {ticket_id} successfully deleted"}), 200
+    
 @mechanics_bp.route("/<int:mechanic_id>", methods=['GET'])
 @limiter.limit("10 per minute")  # Limit to 10 requests per minute
 @cache.cached(timeout=60, key_prefix=lambda: f"mechanic_{mechanic_id}")  # Cache for 1 minute

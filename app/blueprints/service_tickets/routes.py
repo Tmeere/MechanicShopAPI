@@ -1,5 +1,6 @@
 from flask import jsonify, request
 from . import serviceTicket_bp
+from app.models import ServiceStatus
 from .schemas import service_ticket_schema, service_tickets_schema, return_service_ticket_schema
 from app.models import db, Mechanic, ServiceTicket, Customer
 from sqlalchemy import select, delete
@@ -84,3 +85,41 @@ def get_all_tickets():
         return service_tickets_schema.jsonify(service_tickets), 200
     except Exception as e:
         return jsonify({"message": "An error occurred while fetching service tickets", "error": str(e)}), 500
+    
+
+@serviceTicket_bp.route("/ticket-update/<int:ticket_id>", methods=["PUT"], strict_slashes=False)
+def update_ticket_status(ticket_id):
+    try:
+        # Fetch the service ticket from the database
+        query = select(ServiceTicket).where(ServiceTicket.id == ticket_id)
+        service_ticket = db.session.execute(query).scalar_one_or_none()
+
+        if not service_ticket:
+            return jsonify({"message": f"Service ticket with ID {ticket_id} not found"}), 404
+
+        # Get the new status from the request body
+        data = request.get_json(silent=True)
+        if not data or "status" not in data:
+            return jsonify({"message": "Request body must include a 'status' field"}), 400
+
+        new_status = data["status"]
+
+        # Validate the new status
+        valid_statuses = [status.value for status in ServiceStatus]
+        if new_status not in valid_statuses:
+            return jsonify({"message": f"Invalid status. Valid statuses are: {valid_statuses}"}), 400
+
+        # Update the status of the service ticket
+        try:
+            service_ticket.status = ServiceStatus(new_status)
+            db.session.commit()
+            # Clear cache if necessary
+            cache.delete(f"ticket_{ticket_id}")
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+        return jsonify({"message": f"Service ticket {ticket_id} status updated to {new_status}"}), 200
+
+    except Exception as e:
+        return jsonify({"message": "An error occurred while updating the service ticket status", "error": str(e)}), 500

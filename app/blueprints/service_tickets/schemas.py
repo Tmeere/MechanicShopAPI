@@ -8,7 +8,7 @@ class ServiceTicketSchema(ma.SQLAlchemyAutoSchema):
 
     class Meta:
         model = ServiceTicket
-        fields = ("id", "vin", "service_date", "service_description", "customer_id", "customer", "mechanics",  "mechanic_ids")
+        fields = ("id", "vin", "service_date", "status", "service_description", "customer_id", "customer", "mechanics",  "mechanic_ids")
         load_instance = False 
 
 # Single and multiple schemas

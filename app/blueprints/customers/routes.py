@@ -1,7 +1,9 @@
 from flask import request, jsonify
 from app.blueprints.customers import customers_bp
-from app.models import Customer, db
+from app.blueprints.service_tickets.schemas import service_tickets_schema 
+from app.models import Customer, db, ServiceTicket
 from app.extensions import limiter, cache
+from werkzeug.security import generate_password_hash
 from app.utils.util import encode_token, token_required
 from .schemas import customer_schema, customers_schema
 from marshmallow import ValidationError
@@ -18,6 +20,9 @@ def login():
 
     query = select(Customer).where(Customer.email == email)
     customer = db.session.execute(query).scalar_one_or_none()
+    
+    if not customer:
+        return jsonify({'message': 'Email invalid or User does not exist, create an account?'})
 
     if customer and customer.password == password:
         auth_token = encode_token(customer.id)
@@ -30,7 +35,42 @@ def login():
         return jsonify(response), 200
     else:
         return jsonify({'message': "Invalid email or password"}), 401
+    
+@customers_bp.route('/password-update', methods=['POST'])
+@token_required
+@limiter.limit("3 per hour")
+def update_password(customer_id):
+    # Fetch the customer from the database
+    query = select(Customer).where(Customer.id == customer_id)
+    customer = db.session.execute(query).scalars().first()
 
+    if customer is None:
+        return jsonify({"message": "Invalid customer ID. Please provide a valid customer ID."}), 404
+
+    if not request.json:
+        return jsonify({"message": "Request body is missing. Please provide the required data."}), 400
+
+    try:
+        # Validate the input data
+        customer_data = customer_schema.load(request.json, partial=True)
+    except ValidationError as e:
+        return jsonify({"message": "Validation error", "errors": e.messages}), 400
+
+    # Check if password is provided
+    if 'password' not in customer_data:
+        return jsonify({"message": "Password field is required to update the password."}), 400
+
+    try:
+        customer.password = (customer_data['password'])
+    except Exception as e:
+        return jsonify({"message": "An error occurred while hashing the password.", "error": str(e)}), 500
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        return jsonify({"message": "An error occurred while saving the changes to the database.", "error": str(e)}), 500
+
+    return jsonify({"message": "Password updated successfully"}), 200
 
 @customers_bp.route("/", methods=['POST'])
 @limiter.limit("3 per hour")
@@ -89,7 +129,7 @@ def update_customer(customer_id):
     existing_customer = db.session.execute(
         select(Customer).where(
             ((Customer.email == customer_data['email']) | 
-             (Customer.phone == customer_data['phone'])) &
+             (Customer.phone == customer_data['phone'])) |
             (Customer.id != customer_id)
         )
     ).scalars().first()
@@ -129,3 +169,32 @@ def get_customer_by_id(customer_id):
         return jsonify({"message": "Customer not found"}), 404
 
     return customer_schema.jsonify(customer), 200
+
+@customers_bp.route("/my-tickets", methods=["GET"])
+@token_required
+def get_customer_tickets(customer_id):
+    # Query only the required fields: VIN, service info, and mechanic name
+    query = select(
+        ServiceTicket.vin,
+        ServiceTicket.service_date,
+        ServiceTicket.service_description,
+        ServiceTicket.status,
+    ).where(ServiceTicket.customer_id == customer_id)
+    
+    tickets = db.session.execute(query).all()
+
+    if not tickets:
+        return jsonify({'message': 'No Tickets were found for this user'})
+
+    # Format the response to include only the required fields
+    tickets_data = [
+    {
+        "vin": ticket.vin,
+        "service_info": ticket.service_date,
+        "description": ticket.service_description,
+        "status": ticket.status.value
+    }
+    for ticket in tickets
+]
+
+    return jsonify(tickets_data), 200
