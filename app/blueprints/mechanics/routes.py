@@ -77,13 +77,23 @@ def get_mechanic(mechanic_id):
 
 @mechanics_bp.route("/", methods=['GET'])
 @limiter.limit("10 per minute")  # Limit to 10 requests per minute
-@cache.cached(timeout=60)  # Cache for 1 minute
+# @cache.cached(timeout=60)  # Cache for 1 minute
 def get_all_mechanics():
-    query = select(Mechanic)
-    mechanics = db.session.execute(query).scalars().all()
+    
+    try:
+        page = int(request.args.get('page'))
+        per_page = int(request.args.get('per_page'))
+        query = select(Mechanic)
+        mechnics = db.paginate(query, page=page, per_page=per_page)
+        
+        return mechanics_schema.jsonify(mechnics),200
+    except:
+        
+        query = select(Mechanic)
+        mechanics = db.session.execute(query).scalars().all()
 
-    # Return all mechanics as a response
-    return mechanics_schema.jsonify(mechanics), 200
+        # Return all mechanics as a response
+        return mechanics_schema.jsonify(mechanics), 200
 
 
 @mechanics_bp.route("/", methods=["POST"])
@@ -158,3 +168,39 @@ def update_mechanic(mechanic_id):
 
     # Return the updated mechanic as a response
     return mechanic_schema.jsonify(mechanic_instance), 200
+
+@mechanics_bp.route("/most-tickets", methods=['GET'])
+def most_tickets():
+    query = select(Mechanic)
+    mechanics = db.session.execute(query).scalars().all()
+
+    # Sort mechanics by the number of assigned service tickets in descending order
+    mechanics.sort(key=lambda mechanic: len(mechanic.assigned_service_tickets), reverse=True)
+
+    # Return the sorted mechanics as a response
+    return mechanics_schema.jsonify(mechanics)
+    
+@mechanics_bp.route("/search", methods=['GET'])
+def search_mechanic():
+    name = request.args.get("name")
+    salary = request.args.get("salary", type=float)
+    below = request.args.get("below", type=bool, default=False) 
+
+    # Build the query
+    query = select(Mechanic)
+
+    # Apply name filter if provided
+    if name:
+        query = query.where(Mechanic.name.like(f'%{name}%'))
+
+    # Apply salary filter if provided
+    if salary:
+        if below:
+            query = query.where(Mechanic.salary <= salary)
+        else:
+            query = query.where(Mechanic.salary >= salary) 
+
+    # Execute the query
+    mechanics = db.session.execute(query).scalars().all()
+
+    return mechanics_schema.jsonify(mechanics)

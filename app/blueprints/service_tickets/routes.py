@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from . import serviceTicket_bp
 from app.models import ServiceStatus
-from .schemas import service_ticket_schema, service_tickets_schema, return_service_ticket_schema
+from .schemas import service_ticket_schema, service_tickets_schema, return_service_ticket_schema, edit_ticket_schema
 from app.models import db, Mechanic, ServiceTicket, Customer
 from sqlalchemy import select, delete
 from marshmallow import ValidationError
@@ -70,18 +70,36 @@ def create_service_ticket():
 
 
 @serviceTicket_bp.route("/", methods=["GET"])
-@cache.cached(timeout=60)
+# @cache.cached(timeout=60)
 def get_all_tickets():
     try:
-        # Add pagination to limit the number of tickets returned
+        # Pagination
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
 
-        # Query service tickets with pagination
-        query = select(ServiceTicket).limit(per_page).offset((page - 1) * per_page)
+        # Filtering
+        mechanic_id = request.args.get("mechanic_id", type=int)
+        service_state = request.args.get("status", type=str)  # Expecting a string for status
+
+        # Build the query
+        query = select(ServiceTicket)
+
+        # Apply filtering for mechanic_id
+        if mechanic_id:
+            query = query.where(ServiceTicket.mechanics.any(Mechanic.id == mechanic_id))
+
+        # Apply filtering for service_state
+        if service_state:
+            try:
+                service_state_enum = ServiceStatus[service_state.upper()]  # Convert to enum
+                query = query.where(ServiceTicket.status == service_state_enum)
+            except KeyError:
+                return jsonify({"message": f"Invalid status: {service_state}. Valid statuses are: {[status.name for status in ServiceStatus]}"}), 400
+
+        # Apply pagination
+        query = query.limit(per_page).offset((page - 1) * per_page)
         service_tickets = db.session.execute(query).scalars().all()
 
-        # Return the serialized list of service tickets
         return service_tickets_schema.jsonify(service_tickets), 200
     except Exception as e:
         return jsonify({"message": "An error occurred while fetching service tickets", "error": str(e)}), 500
@@ -123,3 +141,57 @@ def update_ticket_status(ticket_id):
 
     except Exception as e:
         return jsonify({"message": "An error occurred while updating the service ticket status", "error": str(e)}), 500
+    
+@serviceTicket_bp.route("/<int:ticket_id>", methods=['PUT'])
+def edit_ticket(ticket_id):
+    try:
+        # Validate and load the request data
+        ticket_edits = edit_ticket_schema.load(request.json)
+    except ValidationError as e:
+        return jsonify({"message": "Validation error", "errors": e.messages}), 400
+    except Exception as e:
+        return jsonify({"message": "An unexpected error occurred while validating the request data", "error": str(e)}), 500
+
+    try:
+        # Fetch the service ticket from the database
+        query = select(ServiceTicket).where(ServiceTicket.id == ticket_id)
+        service_ticket = db.session.execute(query).scalars().first()
+
+        if not service_ticket:
+            return jsonify({"message": f"Service ticket with ID {ticket_id} not found"}), 404
+    except Exception as e:
+        return jsonify({"message": "An error occurred while fetching the service ticket", "error": str(e)}), 500
+
+    try:
+        # Add mechanics to the service ticket
+        for mechanic_id in ticket_edits.get('add_mechanic_ids', []):
+            query = select(Mechanic).where(Mechanic.id == mechanic_id)
+            mechanic = db.session.execute(query).scalars().first()
+
+            if not mechanic:
+                return jsonify({"message": f"Mechanic with ID {mechanic_id} not found"}), 404
+
+            if mechanic not in service_ticket.mechanics:
+                service_ticket.mechanics.append(mechanic)
+
+        # Remove mechanics from the service ticket
+        for mechanic_id in ticket_edits.get('remove_mechanic_ids', []):
+            query = select(Mechanic).where(Mechanic.id == mechanic_id)
+            mechanic = db.session.execute(query).scalars().first()
+
+            if not mechanic:
+                return jsonify({"message": f"Mechanic with ID {mechanic_id} not found"}), 404
+
+            if mechanic in service_ticket.mechanics:
+                service_ticket.mechanics.remove(mechanic)
+    except Exception as e:
+        return jsonify({"message": "An error occurred while updating mechanics for the service ticket", "error": str(e)}), 500
+
+    try:
+        # Commit the changes to the database
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "An error occurred while saving changes to the database", "error": str(e)}), 500
+
+    return return_service_ticket_schema.jsonify(service_ticket)

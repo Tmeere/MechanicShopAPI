@@ -105,11 +105,18 @@ def create_customer():
 
 @customers_bp.route("/", methods=['GET'])
 @limiter.limit("10 per minute")
-@cache.cached(timeout=60)
 def get_customers():
-    query = select(Customer)
-    result = db.session.execute(query).scalars().all()
-    return customers_schema.jsonify(result), 200
+    try:
+        page = int(request.args.get('page', 1))  # Default to page 1
+        per_page = int(request.args.get('per_page', 10))  # Default to 10 items per page
+        query = select(Customer)
+        customers = db.paginate(query, page=page, per_page=per_page)
+        
+        return customers_schema.jsonify(customers.items), 200  
+    except:
+        query = select(Customer)
+        result = db.session.execute(query).scalars().all()
+        return customers_schema.jsonify(result), 200
 
 
 @customers_bp.route("/<int:customer_id>", methods=["PUT"])
