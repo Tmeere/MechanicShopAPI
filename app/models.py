@@ -25,6 +25,27 @@ service_ticket_mechanic_association = db.Table(
     db.Column("mechanic_id", ForeignKey("mechanics.id"))  # Foreign key to mechanics
 )
 
+# Junction table model for service_tickets and inventory with additional field
+class ServiceTicketInventory(Base):
+    __tablename__ = "service_ticket_inventory"
+
+    id: Mapped[int] = mapped_column(primary_key=True)  # Primary key
+    service_ticket_id: Mapped[int] = mapped_column(ForeignKey("service_tickets.id"), nullable=False)  # Foreign key to ServiceTicket
+    inventory_id: Mapped[int] = mapped_column(ForeignKey("inventory.id"), nullable=False)  # Foreign key to Inventory
+    quantity: Mapped[int] = mapped_column(nullable=False)  # Additional field for quantity
+
+    # Relationships
+    service_ticket: Mapped["ServiceTicket"] = db.relationship(back_populates="inventory_associations")
+    inventory: Mapped["Inventory"] = db.relationship(back_populates="service_ticket_associations")
+
+# Association table for many-to-many relationship between service_tickets and inventory
+service_ticket_inventory_association = db.Table(
+    "service_ticket_inventory_association",  # Table name
+    Base.metadata,
+    db.Column("service_ticket_id", ForeignKey("service_tickets.id"), primary_key=True),  # Foreign key to service_tickets
+    db.Column("inventory_id", ForeignKey("inventory.id"), primary_key=True)  # Foreign key to inventory
+)
+
 # Customer model representing the "Customers" table
 class Customer(Base):
     __tablename__ = "customers"  # Table name
@@ -42,6 +63,7 @@ class Customer(Base):
         back_populates="customer", 
         cascade="all, delete"  # When a Customer is deleted, their ServiceTickets are also deleted
     )
+
 # ServiceTicket model
 class ServiceTicket(Base):
     __tablename__ = "service_tickets"
@@ -58,6 +80,15 @@ class ServiceTicket(Base):
     mechanics: Mapped[List["Mechanic"]] = db.relationship(
         secondary=service_ticket_mechanic_association, back_populates="assigned_service_tickets"
     )
+    inventory_items: Mapped[List["Inventory"]] = db.relationship(
+        "Inventory",
+        secondary=service_ticket_inventory_association,
+        back_populates="service_tickets"
+    )
+    inventory_associations: Mapped[List["ServiceTicketInventory"]] = db.relationship(
+        "ServiceTicketInventory", back_populates="service_ticket"
+    )
+
 # Mechanic model
 class Mechanic(Base):
     __tablename__ = "mechanics"
@@ -73,4 +104,22 @@ class Mechanic(Base):
         "ServiceTicket", 
         secondary=service_ticket_mechanic_association, 
         back_populates="mechanics"
+    )
+
+# Inventory model
+class Inventory(Base):
+    __tablename__ = "inventory"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(db.String(100))
+    price: Mapped[float] = mapped_column(nullable=False)
+
+    # Relationships
+    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
+        "ServiceTicket", 
+        secondary=service_ticket_inventory_association, 
+        back_populates="inventory_items" , cascade="all, delete"
+    )
+    service_ticket_associations: Mapped[List["ServiceTicketInventory"]] = db.relationship(
+        "ServiceTicketInventory", back_populates="inventory", cascade="all, delete"
     )

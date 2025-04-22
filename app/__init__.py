@@ -4,6 +4,7 @@ from app.extensions import ma, limiter, cache
 from app.blueprints.customers import customers_bp
 from app.blueprints.service_tickets import serviceTicket_bp
 from app.blueprints.mechanics import mechanics_bp
+from app.blueprints.inventory import inventory_bp
 
 def create_app(config_name):
     # Create the Flask application
@@ -20,6 +21,7 @@ def create_app(config_name):
     
     # Register blueprints with their respective URL prefixes
     app.register_blueprint(customers_bp, url_prefix='/customers') 
+    app.register_blueprint(inventory_bp, url_prefix='/inventory') 
     app.register_blueprint(serviceTicket_bp, url_prefix='/service_ticket')   
     app.register_blueprint(mechanics_bp, url_prefix='/mechanics')
     
