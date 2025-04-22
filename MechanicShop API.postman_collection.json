@@ -44,7 +44,7 @@
 					"response": []
 				},
 				{
-					"name": "Get All Customers",
+					"name": "Get Customers by Pagination",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -64,19 +64,29 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/customers",
+							"raw": "{{base_url}}/customers?page=1&per_page=3",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"customers"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "3"
+								}
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Make new Customer",
+					"name": "Create Customer",
 					"request": {
 						"auth": {
 							"type": "noauth"
@@ -85,7 +95,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"Johnt Doe\",\r\n    \"email\": \"jo2hn.wer2we@s.com\",\r\n    \"phone\": \"10011211193\"\r\n}",
+							"raw": "{\r\n    \"name\": \"Tom Meere\",\r\n    \"email\": \"Tom@To.com\",\r\n    \"phone\": \"102123111593\",\r\n    \"password\": \"1234\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -144,7 +154,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"Ligma Doe\",\r\n    \"email\": \"john.doe@example.com\",\r\n    \"phone\": \"1234567890\"\r\n}\r\n",
+							"raw": "{\r\n    \"name\": \"Ligma Doe\",\r\n    \"email\": \"john.doe@example.com\",\r\n    \"phone\": \"1234567890\",\r\n    \"password\": \"1234\"\r\n}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -152,13 +162,135 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/customers/1",
+							"raw": "{{base_url}}/customers/2",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"customers",
-								"1"
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Customer",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"Tom@Tom.com\",\r\n    \"password\": \"1234\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/customers/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"customers",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Customer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4MzE4NjYsImlhdCI6MTc0NDgyODI2Niwic3ViIjoiMSJ9.ZztvGoRFW0ug42iycvao3NHCafQPd9AADEbyKGTK864",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/customers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"customers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Customer Tickets",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4NDExOTUsImlhdCI6MTc0NDgzNzU5NSwic3ViIjoiMSJ9.dBTuqy4mL6UUv4PXqQw467lrtTMel7oDQ_BJkyr3vqU",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/customers/my-tickets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"customers",
+								"my-tickets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Customer Password Update",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4Mzg5NTIsImlhdCI6MTc0NDgzNTM1Miwic3ViIjoiMyJ9.2dHKdu5MhAV-1eOMDKPp-dWGNeWhvOp7V3Uk_OiSmvI",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"password\": \"bazinga\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/customers/password-update",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"customers",
+								"password-update"
 							]
 						}
 					},
@@ -176,7 +308,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"vin\": \"1HGCM82633A123456\",\r\n  \"service_date\": \"2025-04-20\",\r\n  \"service_description\": \"Oil change and tire rotation\",\r\n  \"customer_id\": 5,\r\n  \"mechanic_ids\": [2,3]\r\n}",
+							"raw": "{\r\n  \"vin\": \"1HGCM82633A123456\",\r\n  \"service_date\": \"2025-04-20\",\r\n  \"service_description\": \"Oil change and tire rotation\",\r\n  \"customer_id\": 1,\r\n  \"mechanic_ids\": [1]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -211,6 +343,73 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Update Ticket Status",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"status\": \"Completed\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/service_ticket/ticket-update/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service_ticket",
+								"ticket-update",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tickets Pagination Filtering",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/service_ticket/?status=complete",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service_ticket",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "per_page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "mechanic_id",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "complete"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -218,7 +417,7 @@
 			"name": "Mechanics",
 			"item": [
 				{
-					"name": "Get Mechanics",
+					"name": "Get Mechanics by Pagination",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -235,12 +434,22 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/mechanics",
+							"raw": "{{base_url}}/mechanics?page=1&per_page=3",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"mechanics"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "3"
+								}
 							]
 						}
 					},
@@ -253,7 +462,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"name\": \"BoBoob\",\r\n  \"salary\": 50000\r\n}",
+							"raw": "{\r\n  \"name\": \"Bo31Bob\",\r\n  \"salary\": 25000\r\n}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -311,6 +520,299 @@
 							],
 							"path": [
 								"mechanics",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Mechanic",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"boboob@example.com\",\r\n    \"name\": \"BoBoob\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/mechanics/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"mechanics",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "RemoveTicket",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4MzcyMjYsImlhdCI6MTc0NDgzMzYyNiwic3ViIjoiMSJ9.hKZ-JxgybTG74OFPI9yP7Jgz4soR9COquZw6YmC7w-k",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/mechanics/remove-ticket/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"mechanics",
+								"remove-ticket",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add/Remove Mechanics to TIcket",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"add_mechanic_ids\": [2, 3],\r\n    \"remove_mechanic_ids\": [1]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/service_ticket/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"service_ticket",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Most Tickets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/mechanics/most-tickets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"mechanics",
+								"most-tickets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Mechanic by name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/mechanics/search",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"mechanics",
+								"search"
+							],
+							"query": [
+								{
+									"key": "salary",
+									"value": "25000",
+									"disabled": true
+								},
+								{
+									"key": "below",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "name",
+									"value": "Bo",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Inventory",
+			"item": [
+				{
+					"name": "Add to Inventory",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Brake Pads\",\r\n  \"price\": 49.99\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/inventory/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Inventory",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/inventory/items/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"items",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Parts To Service",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"service_ticket_id\": 1,\r\n    \"quantity\": 3\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/inventory/assign-item/3",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"assign-item",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Parts with Pagination",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/inventory/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"items"
+							],
+							"query": [
+								{
+									"key": "min_price",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "max_price",
+									"value": "3",
+									"disabled": true
+								},
+								{
+									"key": "unassignedParts",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "per_page",
+									"value": "5",
+									"disabled": true
+								},
+								{
+									"key": "name",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Part",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Updated Part Name\",\r\n    \"price\": 99.99\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/inventory/items/3",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"items",
 								"3"
 							]
 						}
