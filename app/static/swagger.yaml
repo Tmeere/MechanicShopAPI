@@ -1,0 +1,593 @@
+swagger: '2.0'
+info:
+  title: "MechanicShop API"
+  description: "This is an API to manage a Mechanic Shop"
+  version: "1.0.0"
+host: "127.0.0.1:5000"
+schemes:
+  - "http"
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+paths:
+  /customers/login:
+    post:
+      tags:
+        - Customers
+      summary: "Login endpoint (generates token)"
+      description: "Validates customer credentials, generates and returns a customer-specific token."
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Login Credentials"
+          required: true
+          schema:
+            $ref: "#/definitions/LoginCredentials"
+      responses:
+        200:
+          description: "Login successful"
+          schema:
+            $ref: "#/definitions/LoginResponse"
+
+  /customers:
+    post:
+      tags:
+        - Customers
+      summary: "Create Customer"
+      description: "Create a new customer."
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer details"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateCustomerPayload"
+      responses:
+        201:
+          description: "Customer created successfully"
+          schema:
+            $ref: "#/definitions/Customer"
+    get:
+      tags:
+        - Customers
+      summary: "Get Customers"
+      description: "Retrieve a list of customers with optional pagination."
+      parameters:
+        - name: "page"
+          in: "query"
+          type: "integer"
+          description: "Page number"
+        - name: "per_page"
+          in: "query"
+          type: "integer"
+          description: "Number of customers per page"
+      responses:
+        200:
+          description: "List of customers"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Customer"
+
+  /customers/{customer_id}:
+    get:
+      tags:
+        - Customers
+      summary: "Get Customer by ID"
+      description: "Retrieve a customer by their ID."
+      parameters:
+        - name: "customer_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the customer"
+      responses:
+        200:
+          description: "Customer details"
+          schema:
+            $ref: "#/definitions/Customer"
+        404:
+          description: "Customer not found"
+          examples:
+            application/json:
+              message: "Customer not found"
+    put:
+      tags:
+        - Customers
+      summary: "Update Customer"
+      description: "Update an existing customer's details. Requires authentication."
+      security:
+        - bearerAuth: []  # Specify the security scheme
+      parameters:
+        - name: "customer_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the customer"
+        - in: "body"
+          name: "body"
+          description: "Updated customer details"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateCustomerPayload"
+      responses:
+        200:
+          description: "Customer updated successfully"
+          schema:
+            $ref: "#/definitions/Customer"
+        404:
+          description: "Customer not found"
+    delete:
+      tags:
+        - Customers
+      summary: "Delete Customer"
+      description: "Delete a customer by their ID. Requires authentication."
+      security:
+        - bearerAuth: []  # Specify the security scheme
+      parameters:
+        - name: "customer_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the customer"
+      responses:
+        200:
+          description: "Customer deleted successfully"
+        404:
+          description: "Customer not found"
+
+  /service_ticket:
+    post:
+      tags:
+        - Tickets
+      summary: "Create a Service Ticket"
+      description: "Create a new service ticket for a customer."
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Service ticket details"
+          required: true
+          schema:
+            $ref: "#/definitions/ServiceTicketPayload"
+      responses:
+        201:
+          description: "Service ticket created successfully"
+          schema:
+            $ref: "#/definitions/ServiceTicket"
+    get:
+      tags:
+        - Tickets
+      summary: "Get All Tickets"
+      description: "Retrieve all service tickets."
+      responses:
+        200:
+          description: "List of service tickets"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ServiceTicket"
+
+  /service_ticket/ticket-update/{ticket_id}:
+    put:
+      tags:
+        - Tickets
+      summary: "Update Ticket Status"
+      description: "Update the status of a service ticket."
+      parameters:
+        - name: "ticket_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the service ticket"
+        - in: "body"
+          name: "body"
+          description: "Updated ticket status"
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateTicketStatusPayload"
+      responses:
+        200:
+          description: "Ticket status updated successfully"
+          schema:
+            $ref: "#/definitions/ServiceTicket"
+
+  /mechanics:
+    get:
+      tags:
+        - Mechanics
+      summary: "Get Mechanics by Pagination"
+      description: "Retrieve a list of mechanics with optional pagination."
+      parameters:
+        - name: "page"
+          in: "query"
+          type: "integer"
+          description: "Page number"
+        - name: "per_page"
+          in: "query"
+          type: "integer"
+          description: "Number of mechanics per page"
+      responses:
+        200:
+          description: "List of mechanics"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Mechanic"
+    post:
+      tags:
+        - Mechanics
+      summary: "Create Mechanic"
+      description: "Create a new mechanic."
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Mechanic details"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateMechanicPayload"
+      responses:
+        201:
+          description: "Mechanic created successfully"
+          schema:
+            $ref: "#/definitions/Mechanic"
+
+  /inventory/items:
+    post:
+      tags:
+        - Inventory
+      summary: "Add to Inventory"
+      description: "Add a new item to the inventory."
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Inventory item details"
+          required: true
+          schema:
+            $ref: "#/definitions/InventoryItemPayload"
+      responses:
+        201:
+          description: "Item added to inventory successfully"
+          schema:
+            $ref: "#/definitions/InventoryItem"
+    get:
+      tags:
+        - Inventory
+      summary: "Get Parts with Pagination"
+      description: "Retrieve inventory items with optional filters and pagination."
+      parameters:
+        - name: "min_price"
+          in: "query"
+          type: "number"
+          description: "Minimum price filter"
+        - name: "max_price"
+          in: "query"
+          type: "number"
+          description: "Maximum price filter"
+        - name: "unassignedParts"
+          in: "query"
+          type: "boolean"
+          description: "Filter for unassigned parts"
+        - name: "page"
+          in: "query"
+          type: "integer"
+          description: "Page number"
+        - name: "per_page"
+          in: "query"
+          type: "integer"
+          description: "Number of items per page"
+      responses:
+        200:
+          description: "List of inventory items"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/InventoryItem"
+
+  /inventory/items/{item_id}:
+    delete:
+      tags:
+        - Inventory
+      summary: "Remove Inventory"
+      description: "Remove an item from the inventory by its ID."
+      parameters:
+        - name: "item_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the inventory item"
+      responses:
+        200:
+          description: "Item removed from inventory successfully"
+    put:
+      tags:
+        - Inventory
+      summary: "Update Part"
+      description: "Update the details of an inventory item."
+      parameters:
+        - name: "item_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the inventory item"
+        - in: "body"
+          name: "body"
+          description: "Updated inventory item details"
+          required: true
+          schema:
+            $ref: "#/definitions/InventoryItemPayload"
+      responses:
+        200:
+          description: "Inventory item updated successfully"
+          schema:
+            $ref: "#/definitions/InventoryItem"
+
+  /inventory/assign-item/{item_id}:
+    post:
+      tags:
+        - Inventory
+      summary: "Add Parts To Service"
+      description: "Assign parts from inventory to a service ticket."
+      parameters:
+        - name: "item_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the inventory item"
+        - in: "body"
+          name: "body"
+          description: "Details of the assignment"
+          required: true
+          schema:
+            $ref: "#/definitions/AssignItemPayload"
+      responses:
+        200:
+          description: "Parts assigned to service ticket successfully"
+
+  /mechanics/most-tickets:
+    get:
+      tags:
+        - Mechanics
+      summary: "Get Most Tickets"
+      description: "Retrieve the mechanic with the most assigned tickets."
+      responses:
+        200:
+          description: "Mechanic with the most tickets"
+          schema:
+            $ref: "#/definitions/Mechanic"
+
+  /mechanics/search:
+    get:
+      tags:
+        - Mechanics
+      summary: "Get Mechanic by Name"
+      description: "Search for mechanics by name or other filters."
+      parameters:
+        - name: "name"
+          in: "query"
+          type: "string"
+          description: "Name of the mechanic"
+        - name: "salary"
+          in: "query"
+          type: "number"
+          description: "Salary filter"
+        - name: "below"
+          in: "query"
+          type: "boolean"
+          description: "Filter for salaries below the specified amount"
+      responses:
+        200:
+          description: "List of mechanics matching the search criteria"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Mechanic"
+
+definitions:
+  LoginCredentials:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+      password:
+        type: "string"
+    required:
+      - email
+      - password
+    example:
+      email: "example@domain.com"
+      password: "securepassword123"
+
+  LoginResponse:
+    type: "object"
+    properties:
+      token:
+        type: "string"
+      message:
+        type: "string"
+      status:
+        type: "string"
+    example:
+      token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      message: "Login successful"
+      status: "success"
+
+  Customer:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      name:
+        type: "string"
+      email:
+        type: "string"
+      phone:
+        type: "string"
+    example:
+      id: 1
+      name: "John Doe"
+      email: "johndoe@example.com"
+      phone: "123-456-7890"
+
+  CreateCustomerPayload:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      email:
+        type: "string"
+      phone:
+        type: "string"
+      password:
+        type: "string"
+    required:
+      - name
+      - email
+      - phone
+      - password
+    example:
+      name: "Jane Doe"
+      email: "janedoe@example.com"
+      phone: "987-654-3210"
+      password: "mypassword"
+
+  ServiceTicket:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      vin:
+        type: "string"
+      service_date:
+        type: "string"
+        format: "date"
+      service_description:
+        type: "string"
+      customer_id:
+        type: "integer"
+      mechanic_ids:
+        type: "array"
+        items:
+          type: "integer"
+    example:
+      id: 101
+      vin: "1HGCM82633A123456"
+      service_date: "2025-04-22"
+      service_description: "Oil change and tire rotation"
+      customer_id: 1
+      mechanic_ids: [2, 3]
+
+  ServiceTicketPayload:
+    type: "object"
+    properties:
+      vin:
+        type: "string"
+      service_date:
+        type: "string"
+        format: "date"
+      service_description:
+        type: "string"
+      customer_id:
+        type: "integer"
+      mechanic_ids:
+        type: "array"
+        items:
+          type: "integer"
+    required:
+      - vin
+      - service_date
+      - service_description
+      - customer_id
+      - mechanic_ids
+    example:
+      vin: "1HGCM82633A123456"
+      service_date: "2025-04-22"
+      service_description: "Brake pad replacement"
+      customer_id: 1
+      mechanic_ids: [2]
+
+  UpdateTicketStatusPayload:
+    type: "object"
+    properties:
+      status:
+        type: "string"
+    required:
+      - status
+    example:
+      status: "Completed"
+
+  Mechanic:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      name:
+        type: "string"
+      salary:
+        type: "number"
+    example:
+      id: 2
+      name: "Mike Johnson"
+      salary: 55000.00
+
+  CreateMechanicPayload:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      salary:
+        type: "number"
+    required:
+      - name
+      - salary
+    example:
+      name: "Sarah Connor"
+      salary: 60000.00
+
+  InventoryItem:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+      name:
+        type: "string"
+      price:
+        type: "number"
+    example:
+      id: 10
+      name: "Brake Pads"
+      price: 75.50
+
+  InventoryItemPayload:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      price:
+        type: "number"
+    required:
+      - name
+      - price
+    example:
+      name: "Air Filter"
+      price: 25.00
+
+  AssignItemPayload:
+    type: "object"
+    properties:
+      service_ticket_id:
+        type: "integer"
+      quantity:
+        type: "integer"
+    required:
+      - service_ticket_id
+      - quantity
+    example:
+      service_ticket_id: 101
+      quantity: 2
+
+securityDefinitions:
+  bearerAuth:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"

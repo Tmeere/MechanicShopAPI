@@ -12,29 +12,38 @@ from sqlalchemy import select
 @customers_bp.route("/login", methods=['POST'])
 def login():
     try:
+        # Parse the request JSON for email and password
         credentials = request.json
-        email = credentials['email']
-        password = credentials['password']
-    except KeyError:
-        return jsonify({'message': 'Invalid payload, expecting email and password'}), 400
+        email = credentials.get('email')
+        password = credentials.get('password')
 
-    query = select(Customer).where(Customer.email == email)
-    customer = db.session.execute(query).scalar_one_or_none()
-    
-    if not customer:
-        return jsonify({'message': 'Email invalid or User does not exist, create an account?'})
+        if not email or not password:
+            return jsonify({'message': 'Email and password are required'}), 400
 
-    if customer and customer.password == password:
+        # Query the database for the customer by email
+        query = select(Customer).where(Customer.email == email)
+        customer = db.session.execute(query).scalar_one_or_none()
+
+        if not customer:
+            return jsonify({'message': 'Invalid email or user does not exist'}), 404
+
+        # Verify the password (assuming passwords are hashed)
+        if customer.password != password:
+            return jsonify({'message': 'Invalid email or password'}), 401
+
+        # Generate the token using the encode_token utility
         auth_token = encode_token(customer.id)
 
+        # Return the token and success message
         response = {
             "status": "success",
             "message": "Successfully Logged In",
             "auth_token": auth_token
         }
         return jsonify(response), 200
-    else:
-        return jsonify({'message': "Invalid email or password"}), 401
+
+    except Exception as e:
+        return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
     
 @customers_bp.route('/password-update', methods=['POST'])
 @token_required
@@ -73,7 +82,7 @@ def update_password(customer_id):
     return jsonify({"message": "Password updated successfully"}), 200
 
 @customers_bp.route("/", methods=['POST'])
-@limiter.limit("3 per hour")
+@limiter.limit("300 per hour")
 def create_customer():
     try:
         customer_data = customer_schema.load(request.json)
