@@ -205,3 +205,19 @@ def get_customer_tickets(customer_id):
     ]
 
     return jsonify(tickets_data), 200
+
+
+@customers_bp.route("/<int:customer_id>", methods=['DELETE'])
+def delete_customer_by_id(customer_id):
+    query = select(Customer).where(Customer.id == customer_id)
+    customer = db.session.execute(query).scalars().first()
+
+    if not customer:
+        return handle_error("Invalid customer ID.", 404)
+
+    try:
+        db.session.delete(customer)
+        db.session.commit()
+        return jsonify({"message": f"Successfully deleted customer {customer_id}"}), 200
+    except Exception as e:
+        return handle_error("An error occurred while deleting the customer.", 500, str(e))
