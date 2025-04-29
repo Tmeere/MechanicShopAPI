@@ -9,7 +9,7 @@ class TestServiceTickets(unittest.TestCase):
             db.drop_all()
             db.create_all()
             # Add a mechanic for assignment
-            mechanic = Mechanic(name="Test Mechanic", salary=50000)
+            mechanic = Mechanic(name="Test Mechanic", email="mechanic@example.com", salary=50000)  # Added email
             db.session.add(mechanic)
             db.session.commit()
         self.client = self.app.test_client()
