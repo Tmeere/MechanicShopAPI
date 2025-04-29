@@ -160,3 +160,16 @@ def update_inventory_item(item_id):
         return jsonify({"message": "Item updated successfully", "item": inventory_schema.dump(item)}), 200
     except Exception as e:
         return handle_error(e)
+    
+
+# Route to get a single inventory item by ID
+@inventory_bp.route('/items/<int:item_id>', methods=['GET'])
+@limiter.limit("10 per minute")
+def get_inventory_item_by_id(item_id):
+    try:
+        item = db.session.get(Inventory, item_id)
+        if not item:
+            return jsonify({"error": "Item not found"}), 404
+        return jsonify(inventory_schema.dump(item)), 200
+    except Exception as e:
+        return handle_error(e)

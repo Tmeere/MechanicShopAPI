@@ -21,7 +21,7 @@ class TestCustomer(unittest.TestCase):
             db.session.commit()
         self.client = self.app.test_client()
 
-    # OKS When given Name, Email, Phone and Password, EMAIL AND PHONE MUST BE UNIQUE
+    # Test creating a new customer with valid data.
     # python -m unittest tests.test_customer.TestCustomer.test_create_customer
     def test_create_customer(self):
         """
@@ -40,7 +40,7 @@ class TestCustomer(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json['name'], "John Doe")
 
-    # Fails as the user fails to provide and Email which is required
+    # Test customer creation with missing required email field.
     # python -m unittest tests.test_customer.TestCustomer.test_invalid_creation
     def test_invalid_creation(self):
         """
@@ -61,7 +61,7 @@ class TestCustomer(unittest.TestCase):
             ['Missing data for required field.']
         )
 
-    #Logins Successfully when provided with the default user credentials
+    # Test successful login with default customer credentials.
     # python -m unittest tests.test_customer.TestCustomer.test_login_customer
     def test_login_customer(self):
         """
@@ -81,7 +81,7 @@ class TestCustomer(unittest.TestCase):
         return response.json['auth_token']
     
     
-    #Logins Fails as user doesnt exist or provided incorrect details
+    # Test login with invalid credentials.
     # python -m unittest tests.test_customer.TestCustomer.test_invalid_login
     def test_invalid_login(self):
         """
@@ -98,7 +98,7 @@ class TestCustomer(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json['message'], 'Invalid email or password!')
 
-    #Gets all Customers
+    # Test retrieving all customers.
     # python -m unittest tests.test_customer.TestCustomer.test_get_all_customers
     def test_get_all_customers(self):
         """
@@ -111,7 +111,7 @@ class TestCustomer(unittest.TestCase):
         self.assertEqual(response.json[0]['name'], 'test_user')
 
     
-    #Deletes Customer using login Customer Details
+    # Test deleting a customer using authentication token.
     # python -m unittest tests.test_customer.TestCustomer.test_delete_customer
     def test_delete_customer(self):
         """
@@ -123,8 +123,8 @@ class TestCustomer(unittest.TestCase):
         print("API response:", response.json)
         self.assertEqual(response.status_code, 200)
    
-    #Deletes Customer using ID
-    # python -m unittest tests.test_customer.TestCustomer.test_delete_customer_ID    
+    # Test deleting a customer by specifying their ID.
+    # python -m unittest tests.test_customer.TestCustomer.test_delete_customer_ID
     def test_delete_customer_ID(self):
         """
         Test deleting a customer by specifying their ID.
@@ -158,8 +158,8 @@ class TestCustomer(unittest.TestCase):
         self.assertEqual(response.json['name'], "updated_user")
     
     
-    # Tests updating an customers information with an customer that has that information already eg Prior Excisting Email     
-    # python -m unittest tests.test_customer.TestCustomer.test_fail_update_customer   
+    # Test updating the logged-in customer's email to one that already exists for another customer.
+    # python -m unittest tests.test_customer.TestCustomer.test_fail_update_customer
     def test_fail_update_customer(self):
         """
         Test updating the logged-in customer's email to one that already exists for another customer.
@@ -219,7 +219,7 @@ class TestCustomer(unittest.TestCase):
                 self.assertEqual(response.status_code, 400)
                 self.assertIn("errors", response.json)
 
-            # Test deleting a customer with invalid token (should fail)
+            # Test deleting a customer with an invalid authentication token (should fail)
             # python -m unittest tests.test_customer.TestCustomer.test_delete_customer_invalid_token
     def test_delete_customer_invalid_token(self):
                 """
@@ -231,7 +231,7 @@ class TestCustomer(unittest.TestCase):
                 print("API response:", response.json)
                 self.assertIn(response.status_code, [401, 403])
 
-            # Test getting a customer by invalid ID (should fail)
+            # Test retrieving a customer by an invalid ID (should fail)
             #  python -m unittest tests.test_customer.TestCustomer.test_get_customer_invalid_id
     def test_get_customer_invalid_id(self):
                 """
@@ -242,7 +242,7 @@ class TestCustomer(unittest.TestCase):
                 print("API response:", response.json)
                 self.assertEqual(response.status_code, 404)
 
-            # Test deleting a customer by invalid ID (should fail)
+            # Test deleting a customer by an invalid ID (should fail)
             # python -m unittest tests.test_customer.TestCustomer.test_delete_customer_invalid_id
     def test_delete_customer_invalid_id(self):
                 """
