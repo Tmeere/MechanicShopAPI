@@ -1,4 +1,4 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: "MechanicShop API"
   description: "This is an API to manage a Mechanic Shop"
@@ -70,6 +70,123 @@ paths:
             items:
               $ref: "#/definitions/Customer"
 
+    put:
+      tags:
+        - Customers
+      summary: "Update Customer"
+      description: "Updates the authenticated customer's information. Requires token authentication."
+      security:
+        - bearerAuth: [] # Assuming token-based authentication
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Customer details to update"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "The customer's name."
+                example: "John Doe"
+              email:
+                type: string
+                description: "The customer's email address."
+                example: "john.doe@example.com"
+              phone:
+                type: string
+                description: "The customer's phone number."
+                example: "+1234567890"
+              password:
+                type: string
+                description: "The customer's password."
+                example: "securepassword123"
+            required:
+              - email
+              - phone
+      responses:
+        200:
+          description: "Customer updated successfully."
+          schema:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: "The customer's ID."
+                example: 1
+              name:
+                type: string
+                description: "The customer's name."
+                example: "John Doe"
+              email:
+                type: string
+                description: "The customer's email address."
+                example: "john.doe@example.com"
+              phone:
+                type: string
+                description: "The customer's phone number."
+                example: "+1234567890"
+        400:
+          description: "Validation error or email/phone conflict."
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Email or phone number already in use."
+        404:
+          description: "Customer not found."
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Invalid customer ID."
+        401:
+          description: "Unauthorized access."
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Unauthorized."
+
+    delete:
+      tags:
+        - Customers
+      summary: "Endpoint to delete a customer"
+      description: "Deletes a customer. Requires token authentication, and the customer must be logged in to delete their account."
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "Successfully deleted the customer"
+          schema:
+            $ref: "#/definitions/DeleteCustomerResponse"
+          examples:
+            application/json:
+              message: "Successfully deleted customer <customer_id>."
+        404:
+          description: "Invalid customer ID"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid customer ID"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized"
+
   /customers/{customer_id}:
     get:
       tags:
@@ -89,53 +206,14 @@ paths:
             $ref: "#/definitions/Customer"
         404:
           description: "Customer not found"
-          examples:
+          content:
             application/json:
-              message: "Customer not found"
-    put:
-      tags:
-        - Customers
-      summary: "Update Customer"
-      description: "Update an existing customer's details. Requires authentication."
-      security:
-        - bearerAuth: []  # Specify the security scheme
-      parameters:
-        - name: "customer_id"
-          in: "path"
-          required: true
-          type: "integer"
-          description: "ID of the customer"
-        - in: "body"
-          name: "body"
-          description: "Updated customer details"
-          required: true
-          schema:
-            $ref: "#/definitions/CreateCustomerPayload"
-      responses:
-        200:
-          description: "Customer updated successfully"
-          schema:
-            $ref: "#/definitions/Customer"
-        404:
-          description: "Customer not found"
-    delete:
-      tags:
-        - Customers
-      summary: "Delete Customer"
-      description: "Delete a customer by their ID. Requires authentication."
-      security:
-        - bearerAuth: []  # Specify the security scheme
-      parameters:
-        - name: "customer_id"
-          in: "path"
-          required: true
-          type: "integer"
-          description: "ID of the customer"
-      responses:
-        200:
-          description: "Customer deleted successfully"
-        404:
-          description: "Customer not found"
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Customer not found"
 
   /service_ticket:
     post:
@@ -231,6 +309,14 @@ paths:
           description: "Mechanic created successfully"
           schema:
             $ref: "#/definitions/Mechanic"
+        400:
+          description: "Duplicate mechanic error"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "A mechanic with this name or email already exists."
 
   /inventory/items:
     post:
@@ -344,12 +430,161 @@ paths:
         200:
           description: "Parts assigned to service ticket successfully"
 
+  /mechanics/login:
+    post:
+      tags:
+        - Mechanics
+      summary: "Mechanic Login"
+      description: "Allows a mechanic to log in using their email and name."
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Mechanic login credentials"
+          required: true
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+                description: "The mechanic's email."
+                example: "mike.johnson@example.com"
+              name:
+                type: string
+                description: "The mechanic's name."
+                example: "Mike Johnson"
+      responses:
+        200:
+          description: "Login successful"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Successfully Logged In"
+              auth_token:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        400:
+          description: "Invalid payload"
+        404:
+          description: "Mechanic not found"
+        401:
+          description: "Invalid email or name"
+
+  /mechanics/remove-ticket/{ticket_id}:
+    delete:
+      tags:
+        - Mechanics
+      summary: "Remove Ticket"
+      description: "Allows a mechanic to remove a service ticket assigned to them."
+      parameters:
+        - name: "ticket_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the service ticket to remove"
+      responses:
+        200:
+          description: "Ticket removed successfully"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Ticket with ID 123 successfully deleted"
+        404:
+          description: "Ticket not found or unauthorized"
+        401:
+          description: "Unauthorized access"
+
+  /mechanics/{mechanic_id}:
+    get:
+      tags:
+        - Mechanics
+      summary: "Get Mechanic by ID"
+      description: "Retrieve a mechanic's details by their ID."
+      parameters:
+        - name: "mechanic_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the mechanic"
+      responses:
+        200:
+          description: "Mechanic details"
+          schema:
+            $ref: "#/definitions/Mechanic"
+        404:
+          description: "Mechanic not found"
+
+    delete:
+      tags:
+        - Mechanics
+      summary: "Delete Mechanic"
+      description: "Delete a mechanic by their ID."
+      parameters:
+        - name: "mechanic_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the mechanic to delete"
+      responses:
+        200:
+          description: "Mechanic deleted successfully"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Mechanic deleted successfully"
+        404:
+          description: "Mechanic not found"
+
+    put:
+      tags:
+        - Mechanics
+      summary: "Update Mechanic"
+      description: "Update a mechanic's details by their ID."
+      parameters:
+        - name: "mechanic_id"
+          in: "path"
+          required: true
+          type: "integer"
+          description: "ID of the mechanic to update"
+        - in: "body"
+          name: "body"
+          description: "Updated mechanic details"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "The mechanic's name."
+                example: "Mike Johnson"
+              salary:
+                type: number
+                description: "The mechanic's salary."
+                example: 60000.00
+      responses:
+        200:
+          description: "Mechanic updated successfully"
+          schema:
+            $ref: "#/definitions/Mechanic"
+        400:
+          description: "Validation error"
+        404:
+          description: "Mechanic not found"
+
   /mechanics/most-tickets:
     get:
       tags:
         - Mechanics
-      summary: "Get Most Tickets"
-      description: "Retrieve the mechanic with the most assigned tickets."
+      summary: "Get Mechanic with Most Tickets"
+      description: "Retrieve the mechanic with the most assigned service tickets."
       responses:
         200:
           description: "Mechanic with the most tickets"
@@ -360,8 +595,8 @@ paths:
     get:
       tags:
         - Mechanics
-      summary: "Get Mechanic by Name"
-      description: "Search for mechanics by name or other filters."
+      summary: "Search Mechanics"
+      description: "Search for mechanics by name or salary filters."
       parameters:
         - name: "name"
           in: "query"
@@ -395,8 +630,8 @@ definitions:
       - email
       - password
     example:
-      email: "example@domain.com"
-      password: "securepassword123"
+      email: "Tom@Tom.com"
+      password: "1234"
 
   LoginResponse:
     type: "object"
@@ -446,10 +681,10 @@ definitions:
       - phone
       - password
     example:
-      name: "Jane Doe"
-      email: "janedoe@example.com"
+      name: "Tom Tom"
+      email: "Tom@Tom.com"
       phone: "987-654-3210"
-      password: "mypassword"
+      password: "1234"
 
   ServiceTicket:
     type: "object"
@@ -591,3 +826,35 @@ securityDefinitions:
     type: "apiKey"
     name: "Authorization"
     in: "header"
+components:
+  schemas:
+    UpdateCustomerPayload:
+      type: object
+      properties:
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          example: john.doe@example.com
+        phone:
+          type: string
+          example: "+1234567890"
+        password:
+          type: string
+          example: "newpassword123"
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          example: john.doe@example.com
+        phone:
+          type: string
+          example: "+1234567890"
