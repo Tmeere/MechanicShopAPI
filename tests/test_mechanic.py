@@ -15,6 +15,7 @@ class TestMechanic(unittest.TestCase):
     def test_create_mechanic(self):
         mechanic_payload = {
             "name": "Mike Johnson",
+            "email": "mike.johnson@example.com",  # Added email
             "salary": 55000.00
         }
         response = self.client.post('/mechanics', json=mechanic_payload, follow_redirects=True)
@@ -25,9 +26,9 @@ class TestMechanic(unittest.TestCase):
     # Test retrieving all mechanics; expects at least one mechanic in the list.
     # python -m unittest tests.test_mechanic.TestMechanic.test_get_mechanics
     def test_get_mechanics(self):
-        # Create a mechanic first to ensure list is not empty
         mechanic_payload = {
             "name": "Test Mechanic",
+            "email": "test.mechanic@example.com",  # Added email
             "salary": 50000.00
         }
         self.client.post('/mechanics', json=mechanic_payload, follow_redirects=True)
@@ -50,6 +51,7 @@ class TestMechanic(unittest.TestCase):
     def test_create_mechanic_duplicate(self):
         mechanic_payload = {
             "name": "Duplicate Mechanic",
+            "email": "duplicate@example.com",  # Added email
             "salary": 50000.00
         }
         self.client.post('/mechanics', json=mechanic_payload, follow_redirects=True)
@@ -61,6 +63,7 @@ class TestMechanic(unittest.TestCase):
     def test_create_mechanic_extra_fields(self):
         mechanic_payload = {
             "name": "Extra Fields",
+            "email": "extra.fields@example.com",  # Added email
             "salary": 60000.00,
             "extra": "should be ignored"
         }
