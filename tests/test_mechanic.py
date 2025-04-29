@@ -79,7 +79,8 @@ class TestMechanic(unittest.TestCase):
 
         mechanic_payload = {
             "name": "Mike Johnson",
-            "salary": 55000.00
+            "salary": 55000.00,
+            "email": "mike.johnson@example.com"  # Added email
         }
         create_response = self.client.post('/mechanics/', json=mechanic_payload)
         mechanic_id = create_response.json['id']
@@ -101,7 +102,8 @@ class TestMechanic(unittest.TestCase):
         # Create a mechanic
         mechanic_payload = {
             "name": "Mike Johnson",
-            "salary": 55000.00
+            "salary": 55000.00,
+            "email": "mike.johnson@example.com"  # Added email
         }
         self.client.post('/mechanics', json=mechanic_payload, follow_redirects=True)
         mechanic_id = 1  # Hard code the id to 1
@@ -157,7 +159,8 @@ class TestMechanic(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         mechanic_payload = {
             "name": "Mike Johnson",
-            "salary": 55000.00
+            "salary": 55000.00,
+            "email": "mike.johnson@example.com"  # Added email
         }
         create_response = self.client.post('/mechanics/', json=mechanic_payload)
         mechanic_id = create_response.json['id']
@@ -178,7 +181,8 @@ class TestMechanic(unittest.TestCase):
         # Create a mechanic
         mechanic_payload = {
             "name": "Mike Johnson",
-            "salary": 55000.00
+            "salary": 55000.00,
+            "email": "mike.johnson@example.com"  # Added email
         }
         create_response = self.client.post('/mechanics/', json=mechanic_payload) 
         self.assertIn(create_response.status_code, [200, 201], msg=f"Create failed: {create_response.data}")
@@ -189,21 +193,3 @@ class TestMechanic(unittest.TestCase):
         response = self.client.delete(f'/mechanics/{mechanic_id}')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['message'], "Mechanic deleted successfully")
-
-    
-    # Test retrieving a mechanic by ID after creation; expects correct mechanic data.
-    # python -m unittest tests.test_mechanic.TestMechanic.test_get_mechanic_by_id
-    def test_get_mechanic_by_id(self):
-        # Create a mechanic
-        mechanic_payload = {
-            "name": "Mike Johnson",
-            "salary": 55000.00
-        }
-        self.client.post('/mechanics', json=mechanic_payload, follow_redirects=True)
-        mechanic_id = 1  # Hard code the id to 1
-
-        # Retrieve the mechanic by ID
-        response = self.client.get(f'/mechanics/{mechanic_id}')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json['name'], "Mike Johnson")
-        self.assertEqual(response.json['salary'], 55000.00)
