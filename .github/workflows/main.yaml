@@ -5,10 +5,10 @@ on:
     branches: [main, master]
 
 jobs:
-  ## previous build step
-	
-	test:
-		needs: build
+
+
+  test:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
