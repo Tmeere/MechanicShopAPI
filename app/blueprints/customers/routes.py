@@ -30,10 +30,10 @@ def login():
         customer = db.session.execute(query).scalar_one_or_none()
 
         if not customer:
-            return handle_error('Invalid email or user does not exist', 404)
+            return handle_error('Invalid email or password!', 400)
 
         if customer.password != password:
-            return handle_error('Invalid email or password', 401)
+            return handle_error('Invalid email or password!', 400)
 
         auth_token = encode_token(customer.id)
         response = {
