@@ -821,6 +821,13 @@ definitions:
       service_ticket_id: 101
       quantity: 2
 
+  DeleteCustomerResponse:
+    type: object
+    properties:
+      message:
+        type: string
+        example: "Successfully deleted customer <customer_id>."
+
 securityDefinitions:
   bearerAuth:
     type: "apiKey"
