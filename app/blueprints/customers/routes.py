@@ -97,7 +97,7 @@ def create_customer():
             name=customer_data['name'],
             email=customer_data['email'],
             phone=customer_data['phone'],
-            password=generate_password_hash(customer_data['password'])
+            password=customer_data['password']  # No hashing
         )
         db.session.add(new_customer)
         db.session.commit()

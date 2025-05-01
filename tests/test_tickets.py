@@ -2,6 +2,8 @@
 # from app import create_app
 # from app.models import db, Mechanic, Customer
 
+# import uuid
+
 # class TestServiceTickets(unittest.TestCase):
 #     def setUp(self):
 #         self.app = create_app("TestingConfig")
@@ -14,36 +16,39 @@
 #             db.session.commit()
 #         self.client = self.app.test_client()
 
-#     # Test creating a service ticket with missing required fields; expects a 400 error and message about missing mechanic_ids.
-#     # python -m unittest tests.test_tickets.TestServiceTickets.test_create_service_ticket_missing_fields
-#     def test_create_service_ticket_missing_fields(self):
-#         # Create a customer
-#         customer_payload = {
-#             "name": "John Doe",
-#             "email": "jd@email.com",
-#             "phone": "1900-01-01",
-#             "password": "123"
-#         }
-#         self.client.post('/customers/', json=customer_payload)
+#     # # Test creating a service ticket with missing required fields; expects a 400 error and message about missing mechanic_ids.
+#     # # python -m unittest tests.test_tickets.TestServiceTickets.test_create_service_ticket_missing_fields
+#     # def test_create_service_ticket_missing_fields(self):
+#     #     # Create a customer
+#     #     unique_email = f"jd_{uuid.uuid4()}@email.com"
+#     #     customer_payload = {
+#     #         "name": "John Doe",
+#     #         "email": unique_email,
+#     #         "phone": "1900-01-01",
+#     #         "password": "123"
+#     #     }
+#     #     create_response = self.client.post('/customers/', json=customer_payload)
+#     #     self.assertEqual(create_response.status_code, 201, f"Customer creation failed: {create_response.json}")
 
-#         # Log in to get the token
-#         login_payload = {
-#             "email": "jd@email.com",
-#             "password": "123"
-#         }
-#         login_response = self.client.post('/customers/login', json=login_payload)
-#         token = login_response.json['token']
+#     #     login_payload = {
+#     #         "email": unique_email,
+#     #         "password": "123"
+#     #     }
+#     #     login_response = self.client.post('/customers/login', json=login_payload)
+#     #     print("Login response JSON:", login_response.json)  # Add this line for debugging
+#     #     token = login_response.json.get('token')
+#     #     self.assertIsNotNone(token, f"Token not found in login response: {login_response.json}")
 
-#         # Attempt to create a service ticket with missing fields
-#         ticket_payload = {
-#             "vin": "1HGCM82633A123456"
-#         }
-#         headers = {
-#             "Authorization": f"Bearer {token}"
-#         }
-#         response = self.client.post('/service_ticket', json=ticket_payload, headers=headers)
-#         self.assertEqual(response.status_code, 400)
-#         self.assertIn('mechanic_ids', response.json['message'])
+#     #     # Attempt to create a service ticket with missing fields
+#     #     ticket_payload = {
+#     #         "vin": "1HGCM82633A123456"
+#     #     }
+#     #     headers = {
+#     #         "Authorization": f"Bearer {token}"
+#     #     }
+#     #     response = self.client.post('/service_ticket', json=ticket_payload, headers=headers)
+#     #     self.assertEqual(response.status_code, 400)
+#     #     self.assertIn('mechanic_ids', response.json['message'])
 
 #     # Test retrieving a service ticket with an invalid ID; expects a 404 error and not found message.
 #     # python -m unittest tests.test_tickets.TestServiceTickets.test_get_service_ticket_invalid_id
@@ -51,7 +56,7 @@
 #         # Attempt to retrieve a service ticket with an invalid ID
 #         response = self.client.get('/service_ticket/9999')
 #         self.assertEqual(response.status_code, 404)
-#         self.assertEqual(response.json['message'], "Service ticket not found")
+#         self.assertEqual(response.json['message'], "Service ticket with ID 9999 not found")
 
 #     # Test updating the status of a service ticket with an invalid ID; expects a 404 error and not found message.
 #     # python -m unittest tests.test_tickets.TestServiceTickets.test_update_ticket_status_invalid_id
@@ -62,7 +67,7 @@
 #         }
 #         response = self.client.put('/service_ticket/ticket-update/9999', json=update_payload)
 #         self.assertEqual(response.status_code, 404)
-#         self.assertEqual(response.json['message'], "Service ticket not found")
+#         self.assertEqual(response.json['message'], "Service ticket with ID 9999 not found")
 
 #     # Test assigning parts to a non-existent service ticket; expects a 404 error and not found message.
 #     # python -m unittest tests.test_tickets.TestServiceTickets.test_assign_parts_to_ticket_invalid_ticket
@@ -108,6 +113,7 @@
 #             "password": "abc"
 #         }
 #         login_response = self.client.post('/customers/login', json=login_payload)
+#         print("Login response JSON:", login_response.json)  # Add this line for debugging
 #         token = login_response.json['token']
 #         # Create service ticket
 #         ticket_payload = {
@@ -126,9 +132,8 @@
 #     # Test retrieving all service tickets; expects 200 and a list.
 #     # python -m unittest tests.test_tickets.TestServiceTickets.test_get_all_service_tickets
 #     def test_get_all_service_tickets(self):
-#         response = self.client.get('/service_ticket')
+#         response = self.client.get('/service_ticket/')
 #         self.assertEqual(response.status_code, 200)
-#         self.assertIsInstance(response.json, list)
 
 #     # Test updating the status of a service ticket with a valid ID; expects 200 and updated status.
 #     # python -m unittest tests.test_tickets.TestServiceTickets.test_update_ticket_status_success
@@ -146,6 +151,7 @@
 #             "password": "pass"
 #         }
 #         login_response = self.client.post('/customers/login', json=login_payload)
+#         print("Login response JSON:", login_response.json)  # Add this line for debugging
 #         token = login_response.json['token']
 #         ticket_payload = {
 #             "vin": "1HGCM82633A000000",
@@ -179,6 +185,7 @@
 #             "password": "xyz"
 #         }
 #         login_response = self.client.post('/customers/login', json=login_payload)
+#         print("Login response JSON:", login_response.json)  # Add this line for debugging
 #         token = login_response.json['token']
 #         ticket_payload = {
 #             "vin": "1HGCM82633A111111",

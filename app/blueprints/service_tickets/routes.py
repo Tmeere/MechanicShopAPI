@@ -195,3 +195,21 @@ def edit_ticket(ticket_id):
         return jsonify({"message": "An error occurred while saving changes to the database", "error": str(e)}), 500
 
     return return_service_ticket_schema.jsonify(service_ticket)
+
+
+@serviceTicket_bp.route("/<int:ticket_id>", methods=['GET'])
+def get_service_ticket(ticket_id):
+    ticket = ServiceTicket.query.get(ticket_id)
+    if not ticket:
+        return jsonify({'message': f'Service ticket with ID {ticket_id} not found'}), 404
+    return return_service_ticket_schema.jsonify(ticket), 200
+
+
+@serviceTicket_bp.route("/<int:ticket_id>", methods=['DELETE'])
+def delete_service_ticket(ticket_id):
+    ticket = ServiceTicket.query.get(ticket_id)
+    if not ticket:
+        return jsonify({'message': 'Service ticket not found'}), 404
+    db.session.delete(ticket)
+    db.session.commit()
+    return jsonify({'message': f'Service ticket {ticket_id} deleted'}), 200
